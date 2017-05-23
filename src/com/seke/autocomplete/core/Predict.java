@@ -30,7 +30,7 @@ public class Predict {
 					.toArray(new String[0]);
 
 		} catch (Exception e) {
-			// e.printStackTrace();
+			e.printStackTrace();
 			return new String[0];
 		}
 	}
