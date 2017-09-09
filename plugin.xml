@@ -11,6 +11,22 @@
             id="com.seke.autocomplete.editors.PythonEditor"
             name="Python Editor">
       </editor>
+      <editor
+            class="com.seke.autocomplete.editors.PythonEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            extensions="j"
+            icon="icons/sample.gif"
+            id="com.seke.autocomplete.editors.JavaEditor"
+            name="Java Editor">
+      </editor>
+      <editor
+            class="com.seke.autocomplete.editors.PythonEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            extensions="c"
+            icon="icons/sample.gif"
+            id="com.seke.autocomplete.editors.CEditor"
+            name="C Editor">
+      </editor>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -44,8 +60,12 @@
             commandId="com.seke.autocomplete.command.Insert">
             <activeWhen>
             	<with variable="activeEditorId">
-       				<equals value="com.seke.autocomplete.editors.PythonEditor"/>
-    			</with>
+            		<or>
+            			<equals value="com.seke.autocomplete.editors.PythonEditor"/>
+            			<equals value="com.seke.autocomplete.editors.JavaEditor"/>
+            			<equals value="com.seke.autocomplete.editors.CEditor"/>
+            		</or>
+            	</with>
             </activeWhen>
       </handler>
    </extension>

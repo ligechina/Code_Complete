@@ -60,7 +60,11 @@ public class PythonEditorListener implements IPartListener2 {
 		if (activePage==null) return;
 		IEditorPart editorPart = activePage.getActiveEditor();
 		if (editorPart==null) return;
-		if (!"com.seke.autocomplete.editors.PythonEditor".equals(editorPart.getEditorSite().getId()))
+		/*if (!"com.seke.autocomplete.editors.PythonEditor".equals(editorPart.getEditorSite().getId()))
+			return;*/
+		
+		String id = editorPart.getEditorSite().getId();
+		if (id == null || !id.startsWith("com.seke.autocomplete.editors"))
 			return;
 		
 		Display display=PlatformUI.getWorkbench().getDisplay();

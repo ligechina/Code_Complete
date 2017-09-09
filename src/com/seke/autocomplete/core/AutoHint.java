@@ -15,11 +15,11 @@ import com.seke.autocomplete.lib.Preference;
 public class AutoHint {
 	private int start = 0, end = 0, ne = 0;
 
-	StyledText styledText;
+	private StyledText styledText;
 	private String[] candidates;
 
 	private static AutoHint hint;
-	TreeMap<Integer, Integer> map;
+	private TreeMap<Integer, Integer> map;
 
 	public static AutoHint getInstance() {
 		if (hint == null)
@@ -48,15 +48,11 @@ public class AutoHint {
 			int offset = styledText.getCaretOffset();
 			if (offset <= start && end > start && start >= 0) {
 				String text = styledText.getText();
-				//styledText.setText(text.substring(0, start)
-				//		+ text.substring(end));
-				//styledText.setCaretOffset(offset);
 				styledText.replaceTextRange(start, text.length()-start, text.substring(end));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//setKeyWordColor();
 		start = end = ne = 0;
 	}
 
@@ -82,11 +78,13 @@ public class AutoHint {
 			pos++;
 			String prefix = text.substring(0, pos);
 			String word = text.substring(pos, offset);
+			
+			if (request || candidates == null)
+				if (word.length()<=2)
+					predict(prefix, word);
+			
 
-			if (request || candidates == null || candidates.length < 3)
-				predict(prefix, word);
-
-			if (candidates!=null && candidates.length > 0) {
+			if (candidates!=null && candidates.length > 0 && !(request && word.length()>2)) {
 
 				// current indent
 				int line_start = prefix.lastIndexOf('\n') + 1;
@@ -97,13 +95,20 @@ public class AutoHint {
 					indent++;
 				}
 
+				String[] temp = candidates.clone();
+				
 				if (!word.isEmpty() && candidates[0].startsWith(word)) {
 					if (candidates[0].equals(word))
 						candidates = Arrays.copyOfRange(candidates, 1,
 								candidates.length);
-					else
-						candidates[0] = candidates[0].substring(word.length());
+					else {
+						//if (word.length()==1)
+							candidates[0] = candidates[0].substring(word.length());
+						//else 
+						//	candidates = new String[] {candidates[0].substring(word.length())};
+					}
 				}
+				
 				StringBuilder builder = new StringBuilder();
 				for (String wd : candidates) {
 					if (wd.equals("<ENTER>")) {
@@ -142,21 +147,16 @@ public class AutoHint {
 					ne += start;
 				} else {
 					ne = start + candidates[0].length();
-					if (candidates.length > 1
-							&& !candidates[1].matches("[.({\\[,:)\\]}]")
-							&& !isSpace(candidates[1])
-							&& !candidates[0].matches("[.({\\[:]"))
+					if (temp.length > 1
+							&& !temp[1].matches("[.({\\[,:)\\]}]")
+							&& !isSpace(temp[1])
+							&& !temp[0].matches("[.({\\[:]"))
 						ne++;
-					if (candidates.length > 1
-							&& candidates[1].equals("[")
-							&& !isCharacter(candidates[0].charAt(candidates[0].length() - 1)))
+					if (temp.length > 1
+							&& temp[1].equals("[")
+							&& !isCharacter(temp[0].charAt(temp[0].length() - 1)))
 						ne++;
 				}
-				// System.out.println(String.format("start=%d, end=%d, ne=%d",
-				// start, end, ne));
-
-				// styledText.setText(text.substring(0,
-				// start)+fill+text.substring(start));
 				styledText.replaceTextRange(start, text.length() - start, fill
 						+ text.substring(le));
 				StyleRange styleRange = new StyleRange(start, fill.length(),
@@ -222,9 +222,6 @@ public class AutoHint {
 	public void doInsert() {
 		if (styledText == null || start == ne || candidates == null)
 			return;
-		//String text = styledText.getText();
-		//styledText
-		//		.replaceTextRange(ne, text.length() - ne, text.substring(end));
 		styledText.setCaretOffset(ne);
 
 		if (isSpace(candidates[0])) {
@@ -237,11 +234,9 @@ public class AutoHint {
 			candidates = Arrays.copyOfRange(candidates, 1, candidates.length);
 			if (styledText.getText().charAt(ne - 1) == ' ')
 				ne--;
-			//completed.add(new Interval(start, ne));
 			map.put(start, ne);
 
 		}
-		//start = ne = end = 0;
 		doAdd(false);
 	}
 	
@@ -249,9 +244,6 @@ public class AutoHint {
 		int offset = styledText.getCaretOffset();
 		String text = styledText.getText().substring(0, offset);
 		int l = offset, s = from, e = from;
-		// StyleRange[] styleRanges=styledText.getStyleRanges();
-		// ArrayList<StyleRange> list=new
-		// ArrayList<>(Arrays.asList(styleRanges));
 		
 		Color keywordColor=ColorConstants.getColor(
 				Preference.getInstance().get("color_keyword", "#0000FF"));
@@ -264,8 +256,6 @@ public class AutoHint {
 			if (s != e) {
 				String word = text.substring(s, e);
 				if (Keywords.isKeyWord(word)) {
-					// list.add(new StyleRange(s, e-s, ColorConstants.blue,
-					// null));
 					try {
 						styledText.setStyleRange(new StyleRange(s, e - s,
 								keywordColor, null));
@@ -277,19 +267,15 @@ public class AutoHint {
 					styledText.setStyleRange(new StyleRange(s, e-s, null, null));
 				}
 			} else {
-				//if (e<l && text.charAt(e)==' ')
-				//	styledText.setStyleRange(new StyleRange(e, 1, null, null));
 				
 				while (e<l && !isCharacter(text.charAt(e)))
 					e++;
 				styledText.setStyleRange(new StyleRange(s, e-s, null, null));
-				//e++;
 			}
 			s = e;
 			if (e >= l)
 				break;
 		}
-		//setCompletedColor();
 	}
 
 	public void setKeyWordColor() {
@@ -309,17 +295,6 @@ public class AutoHint {
 		if ("#FFFFFF".equals(ColorConstants.toString(completedColorBg2)))
 			completedColorBg2=null;
 
-		//LinkedList<Interval> another = new LinkedList<>();
-		/*while (!completed.isEmpty()) {
-			Interval interval = completed.poll();
-			if (interval.end<from) {
-				another.offer(interval);
-				continue;
-			}
-			
-			if (interval.start < offset) {
-				int ed = Math.min(interval.end, offset);
-				another.offer(new Interval(interval.start, ed));*/
 		Map<Integer, Integer> subMap=new TreeMap<Integer, Integer>(map.subMap(from, offset));
 		for (Map.Entry<Integer, Integer> entry: subMap.entrySet()) {
 			int st=entry.getKey(), ed=entry.getValue();
@@ -349,7 +324,6 @@ public class AutoHint {
 				styledText.setStyleRange(curRange);
 			} catch (Exception e) {}
 		}
-		//completed = another;
 	}
 
 	public void setCompletedColor() {
