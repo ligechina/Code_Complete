@@ -279,7 +279,9 @@ public class AutoHint {
 	}
 
 	public void setKeyWordColor() {
-		setKeyWordColor(0);
+		try {
+			setKeyWordColor(0);}
+		catch (Exception e) {}
 	}
 	
 	public void setCompletedColor(int from) {
@@ -327,7 +329,9 @@ public class AutoHint {
 	}
 
 	public void setCompletedColor() {
+		try {
 		setCompletedColor(0);
+		}catch (Exception e) {}
 	}
 	
 	public void updateCompleteMap() {
